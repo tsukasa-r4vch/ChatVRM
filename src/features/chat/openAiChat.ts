@@ -17,7 +17,7 @@ console.log("✅ 送信する messages:", messages);
       "X-Title": "ChatVRM via OpenRouter",
     },
     body: JSON.stringify({
-      model: "mistralai/mistral-7b-instruct:free", // 無料モデルを指定
+      model: "shisa-ai/shisa-v2-llama3.3-70b:free", // 無料モデルを指定
       messages: messages,
       max_tokens: 200,
       stream: false,
@@ -58,7 +58,7 @@ export async function getChatResponseStream(
     headers: headers,
     method: "POST",
     body: JSON.stringify({
-      model: "mistralai/mistral-7b-instruct:free",
+      model: "shisa-ai/shisa-v2-llama3.3-70b:free",
       messages: messages,
       stream: true,
       max_tokens: 200,
