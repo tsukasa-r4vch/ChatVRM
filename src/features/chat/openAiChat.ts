@@ -1,31 +1,42 @@
-import { Configuration, OpenAIApi } from "openai";
 import { Message } from "../messages/messages";
 
+/**
+ * 非ストリーム型：1回のレスポンスをまとめて受け取る
+ */
 export async function getChatResponse(messages: Message[], apiKey: string) {
   if (!apiKey) {
     throw new Error("Invalid API Key");
   }
 
-  const configuration = new Configuration({
-    apiKey: apiKey,
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+      "HTTP-Referer": "https://chat-bj7c20y52-r4vchs-projects.vercel.app", // ← ご自身のURLに変更
+      "X-Title": "ChatVRM via OpenRouter",
+    },
+    body: JSON.stringify({
+      model: "mistralai/mistral-7b-instruct:free", // 無料モデルを指定
+      messages: messages,
+      max_tokens: 200,
+      stream: false,
+    }),
   });
-  // ブラウザからAPIを叩くときに発生するエラーを無くすworkaround
-  // https://github.com/openai/openai-node/issues/6#issuecomment-1492814621
-  delete configuration.baseOptions.headers["User-Agent"];
 
-  const openai = new OpenAIApi(configuration);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+  }
 
-  const { data } = await openai.createChatCompletion({
-    model: "mistralai/mistral-7b-instruct",
-    messages: messages,
-  });
+  const json = await res.json();
+  const message = json?.choices?.[0]?.message?.content || "エラーが発生しました";
 
-  const [aiRes] = data.choices;
-  const message = aiRes.message?.content || "エラーが発生しました";
-
-  return { message: message };
+  return { message };
 }
 
+/**
+ * ストリーム型：文字をリアルタイムで受信
+ */
 export async function getChatResponseStream(
   messages: Message[],
   apiKey: string
@@ -37,9 +48,10 @@ export async function getChatResponseStream(
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${apiKey}`,
-    "HTTP-Referer": "https://chat-bj7c20y52-r4vchs-projects.vercel.app",  // 利用元URLを記入（必須）
+    "HTTP-Referer": "https://chat-bj7c20y52-r4vchs-projects.vercel.app", // ← ご自身のURLに変更
     "X-Title": "ChatVRM via OpenRouter",
   };
+
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     headers: headers,
     method: "POST",
@@ -53,7 +65,7 @@ export async function getChatResponseStream(
 
   const reader = res.body?.getReader();
   if (res.status !== 200 || !reader) {
-    throw new Error("Something went wrong");
+    throw new Error(`Stream error: ${res.status}`);
   }
 
   const stream = new ReadableStream({
@@ -69,8 +81,8 @@ export async function getChatResponseStream(
             .filter((val) => !!val && val.trim() !== "[DONE]");
           for (const chunk of chunks) {
             const json = JSON.parse(chunk);
-            const messagePiece = json.choices[0].delta.content;
-            if (!!messagePiece) {
+            const messagePiece = json.choices?.[0]?.delta?.content;
+            if (messagePiece) {
               controller.enqueue(messagePiece);
             }
           }
