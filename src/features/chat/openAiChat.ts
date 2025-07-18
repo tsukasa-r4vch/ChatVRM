@@ -13,7 +13,7 @@ export async function getChatResponse(messages: Message[], apiKey: string) {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
-      "HTTP-Referer": "https://chat-bj7c20y52-r4vchs-projects.vercel.app", // ← ご自身のURLに変更
+      "HTTP-Referer": "https://chat-vrm-bay.vercel.app", // ← ご自身のURLに変更
       "X-Title": "ChatVRM via OpenRouter",
     },
     body: JSON.stringify({
