@@ -17,7 +17,7 @@ console.log("✅ 送信する messages:", messages);
       "X-Title": "ChatVRM via OpenRouter",
     },
     body: JSON.stringify({
-      model: "openchat/openchat-7b", // 無料モデルを指定
+      model: "mistralai/mistral-7b-instruct:free", // 無料モデルを指定
       messages: messages,
       max_tokens: 200,
       stream: false,
@@ -57,7 +57,7 @@ console.log("✅ 送信する messages:", messages);
     headers: headers,
     method: "POST",
     body: JSON.stringify({
-      model: "openchat/openchat-7b",
+      model: "mistralai/mistral-7b-instruct:free",
       messages: messages,
       stream: false,
       max_tokens: 200,
