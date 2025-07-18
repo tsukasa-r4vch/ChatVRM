@@ -27,7 +27,8 @@ console.log("✅ 送信する messages:", messages);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${await res.text()}`);
   }
-
+  const text = await res.text();
+console.log("Raw response text:", text);
   const json = await res.json();
   const message = json?.choices?.[0]?.message?.content || "エラーが発生しました";
 
@@ -59,7 +60,7 @@ console.log("✅ 送信する messages:", messages);
     body: JSON.stringify({
       model: "mistralai/mistral-7b-instruct:free",
       messages: messages,
-      stream: false,
+      stream: true,
       max_tokens: 200,
     }),
   });
