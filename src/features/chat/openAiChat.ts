@@ -16,7 +16,7 @@ export async function getChatResponse(messages: Message[], apiKey: string) {
   const openai = new OpenAIApi(configuration);
 
   const { data } = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
+    model: "mistralai/mistral-7b-instruct",
     messages: messages,
   });
 
