@@ -37,12 +37,14 @@ export async function getChatResponseStream(
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${apiKey}`,
+    "HTTP-Referer": "https://chat-bj7c20y52-r4vchs-projects.vercel.app",  // 利用元URLを記入（必須）
+    "X-Title": "ChatVRM via OpenRouter",
   };
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     headers: headers,
     method: "POST",
     body: JSON.stringify({
-      model: "gpt-3.5-turbo",
+      model: "mistralai/mistral-7b-instruct",
       messages: messages,
       stream: true,
       max_tokens: 200,
