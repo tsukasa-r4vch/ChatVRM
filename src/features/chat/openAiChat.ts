@@ -44,7 +44,7 @@ export async function getChatResponseStream(
     headers: headers,
     method: "POST",
     body: JSON.stringify({
-      model: "mistralai/mistral-7b-instruct",
+      model: "mistralai/mistral-7b-instruct:free",
       messages: messages,
       stream: true,
       max_tokens: 200,
