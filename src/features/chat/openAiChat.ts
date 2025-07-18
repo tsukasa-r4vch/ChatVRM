@@ -53,7 +53,7 @@ export async function getChatResponseStream(
     "X-Title": "ChatVRM via OpenRouter",
   };
 
-console.log("✅ 送信する messages:", messages);
+  console.log("✅ 送信する messages:", messages);
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     headers: headers,
     method: "POST",
@@ -65,27 +65,46 @@ console.log("✅ 送信する messages:", messages);
     }),
   });
 
-  const reader = res.body?.getReader();
-  if (res.status !== 200 || !reader) {
+  if (res.status !== 200 || !res.body) {
     throw new Error(`Stream error: ${res.status}`);
   }
 
-  const stream = new ReadableStream({
-    async start(controller: ReadableStreamDefaultController) {
-      const decoder = new TextDecoder("utf-8");
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let buffer = "";
+
+  const stream = new ReadableStream<string>({
+    async start(controller) {
       try {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          const data = decoder.decode(value);
-          const chunks = data
-            .split("data:")
-            .filter((val) => !!val && val.trim() !== "[DONE]");
-          for (const chunk of chunks) {
-            const json = JSON.parse(chunk);
-            const messagePiece = json.choices?.[0]?.delta?.content;
-            if (messagePiece) {
-              controller.enqueue(messagePiece);
+          buffer += decoder.decode(value, { stream: true });
+
+          // 受け取ったバッファを改行で分割
+          const lines = buffer.split("\n");
+          // 最後の行は不完全な場合があるのでバッファに残す
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue; // 空行スキップ
+            if (trimmed === "data: [DONE]") {
+              controller.close();
+              return;
+            }
+            if (trimmed.startsWith("data:")) {
+              const jsonStr = trimmed.slice("data:".length).trim();
+              if (!jsonStr) continue;
+              try {
+                const json = JSON.parse(jsonStr);
+                const messagePiece = json.choices?.[0]?.delta?.content;
+                if (messagePiece) {
+                  controller.enqueue(messagePiece);
+                }
+              } catch (e) {
+                console.error("JSON parse error:", e, "Raw:", jsonStr);
+              }
             }
           }
         }
