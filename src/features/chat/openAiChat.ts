@@ -57,7 +57,7 @@ console.log("✅ 送信する messages:", messages);
     headers: headers,
     method: "POST",
     body: JSON.stringify({
-      model: "openchat/openchat-7b:free",
+      model: "openchat/openchat-7b",
       messages: messages,
       stream: false,
       max_tokens: 200,
